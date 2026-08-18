@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Upload, FileText, CheckCircle, AlertCircle, Database, RefreshCw, Trash2 } from "lucide-react";
 
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
+
 export function KnowledgeSettings({ activeTenantId }) {
   const [file, setFile] = useState(null);
   const [textPolicy, setTextPolicy] = useState("");
   const [statusMessage, setStatusMessage] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [knowledgeInfo, setKnowledgeInfo] = useState(null);
-  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
   const fetchKnowledgeInfo = useCallback(async () => {
     try {
@@ -50,7 +51,7 @@ export function KnowledgeSettings({ activeTenantId }) {
         setStatusMessage({ type: "error", text: data.detail || "Upload failed." });
       }
     } catch (err) {
-      setStatusMessage({ type: "error", text: "Connection error. Ensure FastAPI server is running." });
+      setStatusMessage({ type: "error", text: "Connection error. Ensure server is running." });
     } finally {
       setIsUploading(false);
     }
@@ -79,7 +80,7 @@ export function KnowledgeSettings({ activeTenantId }) {
         setStatusMessage({ type: "error", text: data.detail || "Indexing failed." });
       }
     } catch (err) {
-      setStatusMessage({ type: "error", text: "Connection error. Ensure FastAPI server is running." });
+      setStatusMessage({ type: "error", text: "Connection error. Ensure server is running." });
     } finally {
       setIsUploading(false);
     }
@@ -261,7 +262,7 @@ export function KnowledgeSettings({ activeTenantId }) {
             rows={5}
             value={textPolicy}
             onChange={(e) => setTextPolicy(e.target.value)}
-            placeholder="e.g. Working hours: Monday - Saturday 9 AM to 7 PM. Consultation fee: $50. Emergency helpline: 555-0199..."
+            placeholder="e.g. Working hours: Monday - Saturday 9 AM to 7 PM. Consultation fee: $50..."
             style={{
               width: "100%",
               padding: "0.75rem",
