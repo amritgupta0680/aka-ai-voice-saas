@@ -5,13 +5,17 @@ from app.core.config import settings
 
 DATABASE_URL = settings.DATABASE_URL
 
-# Normalize PostgreSQL schemes for SQLAlchemy asyncpg
+# 1. Normalize driver prefix for asyncpg
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 elif DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
 
-# SQLite-specific connect args
+# 2. Fix asyncpg SSL parameter compatibility (replace sslmode with ssl)
+if "sslmode=" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("sslmode=", "ssl=")
+
+# 3. Configure connection arguments based on database engine
 connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 
 engine = create_async_engine(
