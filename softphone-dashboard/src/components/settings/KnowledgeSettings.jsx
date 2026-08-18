@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Upload, FileText, CheckCircle, AlertCircle, Database, RefreshCw, Trash2 } from "lucide-react";
-
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
+import { API_BASE_URL } from "../../config/api";
 
 export function KnowledgeSettings({ activeTenantId }) {
   const [file, setFile] = useState(null);
@@ -12,7 +11,7 @@ export function KnowledgeSettings({ activeTenantId }) {
 
   const fetchKnowledgeInfo = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/tenants/${activeTenantId}/knowledge/files`);
+      const response = await fetch(`${API_BASE_URL}/api/tenants/${activeTenantId}/knowledge/files`);
       if (response.ok) {
         const data = await response.json();
         setKnowledgeInfo(data);
@@ -37,7 +36,7 @@ export function KnowledgeSettings({ activeTenantId }) {
     formData.append("file", file);
 
     try {
-      const response = await fetch(`${API_BASE}/api/tenants/${activeTenantId}/knowledge/upload`, {
+      const response = await fetch(`${API_BASE_URL}/api/tenants/${activeTenantId}/knowledge/upload`, {
         method: "POST",
         body: formData,
       });
@@ -65,7 +64,7 @@ export function KnowledgeSettings({ activeTenantId }) {
     setStatusMessage(null);
 
     try {
-      const response = await fetch(`${API_BASE}/api/tenants/${activeTenantId}/knowledge/text`, {
+      const response = await fetch(`${API_BASE_URL}/api/tenants/${activeTenantId}/knowledge/text`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: textPolicy }),
@@ -89,7 +88,7 @@ export function KnowledgeSettings({ activeTenantId }) {
   const handleResetKnowledge = async () => {
     if (!window.confirm("Are you sure you want to delete all uploaded knowledge for this tenant?")) return;
     try {
-      const res = await fetch(`${API_BASE}/api/tenants/${activeTenantId}/knowledge/reset`, {
+      const res = await fetch(`${API_BASE_URL}/api/tenants/${activeTenantId}/knowledge/reset`, {
         method: "DELETE"
       });
       if (res.ok) {
@@ -103,7 +102,6 @@ export function KnowledgeSettings({ activeTenantId }) {
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-      {/* SECTION 1: LIVE ACTIVE DOCUMENT LIBRARY */}
       <div style={{ backgroundColor: "#1e293b", borderRadius: "0.75rem", padding: "1.5rem", border: "1px solid #334155", marginBottom: "2rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -192,7 +190,6 @@ export function KnowledgeSettings({ activeTenantId }) {
         )}
       </div>
 
-      {/* SECTION 2: UPLOAD AND INDEX FORMS */}
       <div style={{ backgroundColor: "#1e293b", borderRadius: "0.75rem", padding: "1.5rem", border: "1px solid #334155" }}>
         <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", margin: "0 0 1.5rem 0" }}>Upload or Add Knowledge Data</h2>
 
@@ -215,7 +212,6 @@ export function KnowledgeSettings({ activeTenantId }) {
           </div>
         )}
 
-        {/* PDF / Document Upload */}
         <form onSubmit={handleFileUpload} style={{ marginBottom: "2rem", borderBottom: "1px solid #334155", paddingBottom: "1.5rem" }}>
           <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Upload size={18} color="#818cf8" /> Upload Policy PDF or TXT File
@@ -253,7 +249,6 @@ export function KnowledgeSettings({ activeTenantId }) {
           </div>
         </form>
 
-        {/* Plain Text Knowledge Form */}
         <form onSubmit={handleTextIndexing}>
           <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <FileText size={18} color="#10b981" /> Or Paste Policy Text

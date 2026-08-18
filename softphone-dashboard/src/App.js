@@ -37,7 +37,17 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("softphone");
   const [activeTenantId, setActiveTenantId] = useState(null);
 
+  // Bind active tenant dynamically to voice hook
   const voiceCall = useVoiceCall(activeTenantId || "demo-restaurant-101");
+
+  // Switch workspace and ensure clean voice hook reset
+  const handleTenantChange = (tenantId) => {
+    if (voiceCall.callStatus !== "disconnected") {
+      voiceCall.endCall();
+    }
+    setActiveTenantId(tenantId);
+    setActiveTab("softphone");
+  };
 
   // LANDING SCREEN: Select Tenant First
   if (!activeTenantId) {
@@ -60,7 +70,7 @@ export default function App() {
               return (
                 <div
                   key={tenant.id}
-                  onClick={() => setActiveTenantId(tenant.id)}
+                  onClick={() => handleTenantChange(tenant.id)}
                   style={{
                     backgroundColor: "#1e293b",
                     border: "1px solid #334155",
@@ -106,7 +116,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         activeTenantId={activeTenantId}
-        setActiveTenantId={setActiveTenantId}
+        setActiveTenantId={handleTenantChange}
       />
 
       {activeTab === "softphone" && (

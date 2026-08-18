@@ -1,3 +1,6 @@
+import os
+import json
+import shutil
 import uvicorn
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, UploadFile, File, HTTPException, Query
@@ -56,16 +59,21 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Comprehensive CORS setup for Vercel production frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
+# Include WebSocket router
 app.include_router(websocket_router)
 
+
+# --- REQUEST & RESPONSE SCHEMAS ---
 
 class TextKnowledgePayload(BaseModel):
     content: str
@@ -75,14 +83,20 @@ class AppointmentStatusUpdate(BaseModel):
     status: str  # "Confirmed", "Completed", "Cancelled"
 
 
+class OutboundCallTrigger(BaseModel):
+    customer_name: str
+    target_time: str
+    service_type: str
+
+
+# --- HEALTH CHECK ENDPOINT ---
+
 @app.get("/")
 async def root_health_check():
     return {"status": "online", "service": "AI Voice Operations Platform API"}
 
 
 # --- KNOWLEDGE MANAGEMENT ENDPOINTS ---
-
-import json
 
 @app.get("/api/tenants/{tenant_id}/knowledge/files")
 async def get_tenant_knowledge_files(tenant_id: str):
@@ -113,27 +127,6 @@ async def get_tenant_knowledge_files(tenant_id: str):
         "message": "Active vector index loaded successfully."
     }
 
-import os
-
-@app.get("/api/tenants/{tenant_id}/knowledge/files")
-async def get_tenant_knowledge_files(tenant_id: str):
-    """Returns metadata about the active vector store index and stored knowledge documents for a tenant."""
-    index_folder = os.path.join("data", "vector_stores", f"tenant_{tenant_id}")
-    
-    if not os.path.exists(index_folder):
-        return {
-            "has_index": False,
-            "message": "No vector knowledge base indexed for this tenant yet."
-        }
-
-    index_files = os.listdir(index_folder)
-    return {
-        "has_index": True,
-        "tenant_id": tenant_id,
-        "index_path": index_folder,
-        "indexed_files": index_files,
-        "message": "Active vector index loaded successfully."
-    }
 
 @app.post("/api/tenants/{tenant_id}/knowledge/upload")
 async def upload_tenant_knowledge_file(tenant_id: str, file: UploadFile = File(...)):
@@ -167,6 +160,17 @@ async def add_tenant_knowledge_text(tenant_id: str, payload: TextKnowledgePayloa
         "message": f"Successfully indexed text knowledge for tenant '{tenant_id}'.",
         "chunks_indexed": chunk_count
     }
+
+
+@app.delete("/api/tenants/{tenant_id}/knowledge/reset")
+async def reset_tenant_knowledge(tenant_id: str):
+    """Deletes all indexed vector files and metadata for the given tenant."""
+    index_folder = os.path.join("data", "vector_stores", f"tenant_{tenant_id}")
+    if os.path.exists(index_folder):
+        shutil.rmtree(index_folder)
+        print(f"[Knowledge Reset]: Cleared index directory for tenant {tenant_id}")
+        return {"status": "success", "message": "Knowledge base reset successfully."}
+    return {"status": "noop", "message": "No knowledge index existed to delete."}
 
 
 # --- REPORTING & CRM ENDPOINTS ---
@@ -211,7 +215,7 @@ async def get_tenant_appointments(
     
     return [
         {
-            "id": appt.id[:8].upper(),
+            "id": appt.id[:8].upper() if appt.id else "APPT",
             "patient_name": appt.patient_name,
             "service_type": appt.service_type,
             "appointment_time": appt.appointment_time,
@@ -270,11 +274,6 @@ async def delete_appointment(
         "message": "Appointment deleted successfully."
     }
 
-class OutboundCallTrigger(BaseModel):
-    customer_name: str
-    target_time: str
-    service_type: str
-
 
 @app.post("/api/tenants/{tenant_id}/outbound/trigger")
 async def trigger_outbound_call(tenant_id: str, payload: OutboundCallTrigger):
@@ -290,18 +289,6 @@ async def trigger_outbound_call(tenant_id: str, payload: OutboundCallTrigger):
         "initial_agent_speech": opening_greeting,
         "message": f"Outbound call dispatched for {payload.customer_name}."
     }
-
-import shutil
-
-@app.delete("/api/tenants/{tenant_id}/knowledge/reset")
-async def reset_tenant_knowledge(tenant_id: str):
-    """Deletes all indexed vector files and metadata for the given tenant."""
-    index_folder = os.path.join("data", "vector_stores", f"tenant_{tenant_id}")
-    if os.path.exists(index_folder):
-        shutil.rmtree(index_folder)
-        print(f"[Knowledge Reset]: Cleared index directory for tenant {tenant_id}")
-        return {"status": "success", "message": "Knowledge base reset successfully."}
-    return {"status": "noop", "message": "No knowledge index existed to delete."}
 
 
 if __name__ == "__main__":

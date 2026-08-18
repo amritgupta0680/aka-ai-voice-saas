@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Users, TrendingUp, Calendar, Trash2, PhoneOutgoing } from "lucide-react";
 import { KpiCard } from "../common/KpiCard";
-
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
+import { API_BASE_URL } from "../../config/api";
 
 export function AnalyticsDashboard({ activeTenantId }) {
   const [callLogs, setCallLogs] = useState([]);
@@ -14,8 +13,8 @@ export function AnalyticsDashboard({ activeTenantId }) {
     setIsLoading(true);
     try {
       const [logsRes, apptsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/logs?tenant_id=${activeTenantId}`),
-        fetch(`${API_BASE}/api/appointments?tenant_id=${activeTenantId}`)
+        fetch(`${API_BASE_URL}/api/logs?tenant_id=${activeTenantId}`),
+        fetch(`${API_BASE_URL}/api/appointments?tenant_id=${activeTenantId}`)
       ]);
       if (logsRes.ok) setCallLogs(await logsRes.json());
       if (apptsRes.ok) setAppointments(await apptsRes.json());
@@ -32,7 +31,7 @@ export function AnalyticsDashboard({ activeTenantId }) {
 
   const handleStatusChange = async (appointmentId, newStatus) => {
     try {
-      const res = await fetch(`${API_BASE}/api/appointments/${appointmentId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -46,7 +45,7 @@ export function AnalyticsDashboard({ activeTenantId }) {
   const handleDeleteAppointment = async (appointmentId) => {
     if (!window.confirm("Are you sure you want to delete this appointment?")) return;
     try {
-      const res = await fetch(`${API_BASE}/api/appointments/${appointmentId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
         method: "DELETE"
       });
       if (res.ok) fetchDashboardData();
@@ -57,7 +56,7 @@ export function AnalyticsDashboard({ activeTenantId }) {
 
   const handleTriggerOutbound = async (appt) => {
     try {
-      const res = await fetch(`${API_BASE}/api/tenants/${activeTenantId}/outbound/trigger`, {
+      const res = await fetch(`${API_BASE_URL}/api/tenants/${activeTenantId}/outbound/trigger`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -79,14 +78,12 @@ export function AnalyticsDashboard({ activeTenantId }) {
 
   return (
     <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-      {/* Metric Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
         <KpiCard title="Total Handled Calls" value={totalCalls} icon={Users} iconColor="#818cf8" />
         <KpiCard title="Booked Appointments" value={totalAppointments} icon={Calendar} iconColor="#10b981" />
         <KpiCard title="Avg Lead Score" value={`${avgLeadScore}%`} icon={TrendingUp} iconColor="#f59e0b" />
       </div>
 
-      {/* Interactive Appointments Table */}
       <div style={{ backgroundColor: "#1e293b", borderRadius: "0.75rem", border: "1px solid #334155", padding: "1.5rem", marginBottom: "2rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <h2 style={{ fontSize: "1.125rem", fontWeight: "bold", margin: 0 }}>Booked Appointments & Reservations</h2>
@@ -178,7 +175,6 @@ export function AnalyticsDashboard({ activeTenantId }) {
         )}
       </div>
 
-      {/* Call Logs Table */}
       <div style={{ backgroundColor: "#1e293b", borderRadius: "0.75rem", border: "1px solid #334155", padding: "1.5rem" }}>
         <h2 style={{ fontSize: "1.125rem", fontWeight: "bold", margin: "0 0 1rem 0" }}>Call Logs & Post-Call Intelligence</h2>
         {isLoading ? (
@@ -236,7 +232,6 @@ export function AnalyticsDashboard({ activeTenantId }) {
         )}
       </div>
 
-      {/* Transcript Drawer Modal */}
       {selectedLog && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 1000 }}>
           <div style={{ width: "100%", maxWidth: "600px", backgroundColor: "#1e293b", borderRadius: "0.75rem", padding: "1.5rem", border: "1px solid #334155", maxHeight: "80vh", overflowY: "auto" }}>

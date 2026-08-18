@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-
-const WS_BASE_URL = process.env.REACT_APP_WS_URL || "ws://localhost:8000";
+import { WS_BASE_URL } from "../config/api";
 
 export function useVoiceCall(tenantId = "demo-restaurant-101") {
   const [callStatus, setCallStatus] = useState("disconnected");
